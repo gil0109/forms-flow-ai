@@ -8,6 +8,8 @@ x-redash-service: &redash-service
       - redis
   env_file: .env
   restart: always
+  networks:
+    - default
 
 services:
   server:
@@ -39,6 +41,8 @@ services:
   redis:
     image: redis:6-alpine
     restart: always
+    networks:
+      - default
   forms-flow-analytics-db:
     image: postgres:14
     ports:
@@ -47,6 +51,8 @@ services:
     env_file: .env
     volumes:
       - analyticsdb:/var/lib/postgresql/data 777
+    networks:
+      - default
   # Uncomment the following to enable redash mail server
   # email:
   #   image: djfarrelly/maildev
@@ -55,3 +61,7 @@ services:
   #   restart: unless-stopped
 volumes:
   analyticsdb:
+networks:
+  default:
+    name: docker_forms-flow-network
+    external: true
