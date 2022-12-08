@@ -4,7 +4,7 @@ version: "3.7"
 x-redash-service: &redash-service
   image: redash/redash:10.1.0.b50633
   depends_on:
-      - postgres
+      - forms-flow-analytics-db
       - redis
   env_file: .env
   restart: always
@@ -39,17 +39,19 @@ services:
   redis:
     image: redis:6-alpine
     restart: always
-  postgres:
-    image: postgres:9.6-alpine
+  forms-flow-analytics-db:
+    image: postgres:14
     ports:
       - '7432:5432'
     restart: always
     env_file: .env
     volumes:
-      - ./postgres/analytics:/var/lib/postgresql/data
+      - analyticsdb:/var/lib/postgresql/data 777
   # Uncomment the following to enable redash mail server
   # email:
   #   image: djfarrelly/maildev
   #   ports:
   #     - "1080:80"
   #   restart: unless-stopped
+volumes:
+  analyticsdb:
