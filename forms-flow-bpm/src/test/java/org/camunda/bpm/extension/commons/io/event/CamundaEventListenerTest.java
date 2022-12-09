@@ -6,7 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -26,7 +26,7 @@ public class CamundaEventListenerTest {
 	public CamundaEventListener camundaEventListener;
 
 	@Mock
-	private SimpMessagingTemplate template;
+	private StringRedisTemplate template;
 
 	/**
 	 * Test perform a positive test over onTaskEventListener
@@ -105,21 +105,6 @@ public class CamundaEventListenerTest {
 				"{\"assignee\":null,\"createTime\":null,\"deleteReason\":null,\"description\":null,\"dueDate\":null,\"eventName\":\"create\",\"executionId\":null,\"followUpDate\":null,\"id\":null,\"name\":null,\"owner\":null,\"priority\":0,\"processDefinitionId\":null,\"processInstanceId\":null,\"taskDefinitionKey\":null,\"variables\":{\"applicationStatus\":null,\"formUrl\":null,\"applicationId\":null}}",
 				captor.getAllValues().get(0));
 		assertEquals("{\"id\":null,\"eventName\":\"create\"}", captor.getAllValues().get(1));
-	}
-	
-	/**
-	 * Negetive test case. 
-	 * Test perform with no events on onTaskEventListener
-	 */
-	@Test
-	public void onTaskEventListener_with_no_registeredEvents() {
-		DelegateTask delegateTask = mock(DelegateTask.class);
-		when(delegateTask.getEventName())
-				.thenReturn("create");
-
-		camundaEventListener.onTaskEventListener(delegateTask);
-		ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
-		verify(template, times(0)).convertAndSend(anyString(), captor.capture());
 	}
     
 }

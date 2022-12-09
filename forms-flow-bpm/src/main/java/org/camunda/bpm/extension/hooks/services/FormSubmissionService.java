@@ -4,6 +4,7 @@ package org.camunda.bpm.extension.hooks.services;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.camunda.bpm.engine.variable.Variables;
 import org.camunda.bpm.engine.variable.value.FileValue;
@@ -19,9 +20,12 @@ import org.springframework.stereotype.Service;
 
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 
 @Qualifier("formSubmissionService")
@@ -72,6 +76,17 @@ public class FormSubmissionService {
             return submissionId;
         } else {
             throw new FormioServiceException("Unable to create submission for: "+ formUrl+ ". Message Body: " +
+                    response.getBody());
+        }
+    }
+
+    public void updateSubmission(String submissionUrl, String submission) throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        ResponseEntity<String> response =  httpServiceInvoker.execute(submissionUrl, HttpMethod.PUT, submission);
+        if(response.getStatusCode().value() != HttpStatus.OK.value()) {
+            LOGGER.log(Level.SEVERE,"Unable to update submission for "+submissionUrl +
+                    " Response code::" + response.getStatusCode().value());
+            throw new FormioServiceException("Unable to update submission for: "+ submissionUrl + ". Message Body: " +
                     response.getBody());
         }
     }
@@ -158,6 +173,15 @@ public class FormSubmissionService {
     }
 
     public String createFormSubmissionData(Map<String,Object> bpmVariables) throws IOException {
+        List<String> fileKeys = bpmVariables.keySet().stream()
+                .filter((key) -> key.endsWith("_file"))
+                .collect(Collectors.toList());
+        for (String fileKey: fileKeys) {
+            InputStream file = (InputStream) bpmVariables.get(fileKey);
+            byte[] bytes = IOUtils.toByteArray(file);
+            String fileString = new String(bytes, StandardCharsets.UTF_8);
+            bpmVariables.put(fileKey, fileString);
+        }
         Map<String, Map<String,Object>> data = new HashMap<>();
         data.put("data",bpmVariables);
         return getObjectMapper().writeValueAsString(data);

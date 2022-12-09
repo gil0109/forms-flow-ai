@@ -1,24 +1,26 @@
 package org.camunda.bpm.extension.commons.io.event;
 
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.camunda.bpm.engine.delegate.DelegateTask;
 import org.camunda.bpm.engine.delegate.TaskListener;
+import org.camunda.bpm.extension.commons.io.ITaskEvent;
 import org.camunda.bpm.extension.commons.io.socket.message.TaskEventMessage;
 import org.camunda.bpm.extension.commons.io.socket.message.TaskMessage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+
+
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+import java.util.logging.Logger;
 
 /**
  * This class intercepts all camunda task and push socket messages for web tier updates.
@@ -26,39 +28,35 @@ import java.util.*;
  * @author sumathi.thirumani@aot-technologies.com
  */
 @Component
-public class CamundaEventListener {
-
-    private final Logger logger = LoggerFactory.getLogger(CamundaEventListener.class.getName());
+public class CamundaEventListener implements ITaskEvent {
 
     @Autowired
-    private SimpMessagingTemplate template;
+    private StringRedisTemplate stringRedisTemplate;
+
+    private final Logger LOGGER = Logger.getLogger(CamundaEventListener.class.getName());
 
     @Value("${websocket.messageType}")
     private String messageCategory;
-
-    @Value("${websocket.messageEvents}")
+	
+	@Value("${websocket.messageEvents}")
     private String messageEvents;
 
 
     @EventListener
     public void onTaskEventListener(DelegateTask taskDelegate) {
+        LOGGER.info("Event triggered:"+taskDelegate.getId() +"-"+ taskDelegate.getEventName() + "-"+ taskDelegate.getProcessInstanceId());
         try {
-            if (isRegisteredEvent(taskDelegate.getEventName())) {
-                if (isAllowed("TASK_EVENT_DETAILS")) {
-                    this.template.convertAndSend("/topic/task-event-details", getObjectMapper().writeValueAsString(getTaskMessage(taskDelegate)));
-                }
-                if (isAllowed("TASK_EVENT")) {
-                    this.template.convertAndSend("/topic/task-event", getObjectMapper().writeValueAsString(getTaskEventMessage(taskDelegate)));
-                }
-            }
-            } catch(JsonProcessingException e){
-                logger.error("Unable to send message", e);
-            }
-
-    }
-
-    private ObjectMapper getObjectMapper() {
-        return new ObjectMapper();
+			if (isRegisteredEvent(taskDelegate.getEventName())) {
+				if(isAllowed(EventCategory.TASK_EVENT_DETAILS.name())) {
+					this.stringRedisTemplate.convertAndSend(getTopicNameForTaskDetail(),  getObjectMapper().writeValueAsString(getTaskMessage(taskDelegate)));
+				}
+				if(isAllowed(EventCategory.TASK_EVENT.name())) {
+					this.stringRedisTemplate.convertAndSend(getTopicNameForTask(),  getObjectMapper().writeValueAsString(getTaskEventMessage(taskDelegate)));
+				}
+			}
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
     }
 
     private TaskMessage getTaskMessage(DelegateTask taskDelegate) {
@@ -74,12 +72,11 @@ public class CamundaEventListener {
         return taskObj;
     }
 
-
     private boolean isAllowed(String category) {
         return Arrays.asList(StringUtils.split(messageCategory,",")).contains(category);
     }
-
-    private boolean isRegisteredEvent(String eventName) {
+	
+	private boolean isRegisteredEvent(String eventName) {
         if("ALL".equalsIgnoreCase(messageEvents)) { return true;}
         return getRegisteredEvents().contains(eventName);
     }
@@ -88,8 +85,7 @@ public class CamundaEventListener {
         if ("DEFAULT".equalsIgnoreCase(messageEvents)) {
             return getDefaultRegisteredEvents();
         }
-        String events = messageEvents != null?messageEvents: "";
-        return Arrays.asList(StringUtils.split(events,","));
+        return Arrays.asList(StringUtils.split(messageEvents,","));
     }
 
     private Map<String,Object> getVariables(DelegateTask taskDelegate) {
@@ -107,9 +103,20 @@ public class CamundaEventListener {
         return new ArrayList<>(Arrays. asList("applicationId", "formUrl", "applicationStatus"));
     }
 
-    private List<String> getDefaultRegisteredEvents() {
-        return Arrays.asList(TaskListener.EVENTNAME_CREATE,TaskListener.EVENTNAME_UPDATE,TaskListener.EVENTNAME_COMPLETE);
+    private List<String> getDefaultRegisteredEvents() {	
+        return Arrays.asList(TaskListener.EVENTNAME_CREATE,
+            TaskListener.EVENTNAME_UPDATE,
+            TaskListener.EVENTNAME_COMPLETE
+        );
     }
 
+    private ObjectMapper getObjectMapper() {
+        return new ObjectMapper();
+    }
+
+    enum EventCategory {
+        TASK_EVENT,
+        TASK_EVENT_DETAILS;
+    }
 
 }

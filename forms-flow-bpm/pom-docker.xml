@@ -282,16 +282,21 @@
 			<artifactId>lombok</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-websocket</artifactId>
-			<version>5.3.4</version>
+		<dependency>	
+			<groupId>org.springframework</groupId>	
+			<artifactId>spring-websocket</artifactId>	
+			<version>5.3.4</version>	
+		</dependency>
+
+		<dependency>	
+			<groupId>org.springframework</groupId>	
+			<artifactId>spring-messaging</artifactId>	
+			<version>5.3.4</version>	
 		</dependency>
 
 		<dependency>
-			<groupId>org.springframework</groupId>
-			<artifactId>spring-messaging</artifactId>
-			<version>5.3.4</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-data-redis-reactive</artifactId>
 		</dependency>
 
 	</dependencies>
@@ -307,7 +312,6 @@
 			<name>Camunda Maven Repository</name>
 			<url>https://app.camunda.com/nexus/repository/camunda-bpm-community-extensions-snapshots</url>
 		</repository>
-
 	</repositories>
 
 	<build>

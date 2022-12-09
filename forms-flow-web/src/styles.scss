@@ -54,16 +54,6 @@ $dark: $gray-800;
   //height: 100vh;
   height: 100%;
 }
-.overflow-x-auto{
-  overflow-x: auto;
-  overflow-y: hidden;
-}
-
-.overflow-y-auto{
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
 .task-container{
   height: 100% !important;
 }
@@ -208,7 +198,7 @@ i.fa.fa-question-circle.text-muted {
 }
 .main-nav {
   text-decoration: none !important;
-  color: $black !important;
+  color: $white !important;
   font-size: 20px !important;
 }
 .nav-user-role {
@@ -243,34 +233,65 @@ i.fa.fa-question-circle.text-muted {
 }
 .nav-link {
   a {
-    color: black;
+    color: white;
   }
 }
 .active {
-  background-color: $white;
+  background-color: transparent;
 }
 .active-tab {
   //color: $lightblue !important;
   //border-bottom: 1px solid red;
   background-color: transparent;
-  filter: invert(36%) sepia(38%) saturate(7152%) hue-rotate(227deg) brightness(101%) contrast(98%);
+  filter: invert(80%) sepia(81%) saturate(4581%) hue-rotate(345deg) brightness(95%) contrast(101%);
+}
+.inactive-tab {
+  filter: brightness(0) invert(1);
 }
 
-.active-tab-dropdown > #dashboard-dropdown {
+.active-tab-dropdown {
+  // color: #fcba19 !important;
+  //border-bottom: 1px solid red;
+  background-color: transparent;
+  filter: invert(80%) sepia(81%) saturate(4581%) hue-rotate(345deg) brightness(95%) contrast(101%);
+}
+.inactive-tab-dropdown > #dashboard-dropdown {
   //color: $lightblue !important;
   //border-bottom: 1px solid red;
   background-color: transparent;
-  filter: invert(36%) sepia(38%) saturate(7152%) hue-rotate(227deg) brightness(101%) contrast(98%);
+  filter: brightness(0) invert(1);
 }
 .active-tab-dropdown > #task-dropdown {
   //color: $lightblue !important;
   //border-bottom: 1px solid red;
   background-color: transparent;
-  filter: invert(36%) sepia(38%) saturate(7152%) hue-rotate(227deg) brightness(101%) contrast(98%);
+  filter: invert(80%) sepia(81%) saturate(4581%) hue-rotate(345deg) brightness(95%) contrast(101%);
 }
 .dropdown-item:hover{
   filter: none;
   background-color: #e9ecef;
+}
+#task-dropdown::after {
+  color: #fcba19;
+}
+#dashboard-dropdown::after {
+  color: #fcba19;
+}
+.dashboard-dropdown-options {
+  padding-right: 5px;
+  margin-left: -5px;
+}
+.dropdown-option-selected {
+  background-color: #e9ecef !important;
+  color: #212529 !important;
+}
+.inactive-tab:hover{
+  color:  #fcba19;
+  cursor: pointer;
+}
+#username:hover {
+  color:  #fcba19;
+  cursor: pointer;
 }
 .selected-tag {
   color: $lightblue !important;
@@ -314,11 +335,12 @@ i.fa.fa-question-circle.text-muted {
     left: 10%;
     right: 100%;
   }
-  .dasboard-icon-dropdown{
+  .dashboard-icon-dropdown{
     margin-bottom: 5px;
   }
   .task-dropdown-icon{
     margin-bottom: 1px;
+    color: white;
   }
   .applications-icon-header{
     width: 23px;
@@ -504,7 +526,7 @@ header nav {
 
 .topheading-border-bottom {
   z-index: 2000;
-  border-bottom: 2px solid #4d61fc !important;
+  border-bottom: 2px solid #fcba19 !important;
   padding: 0 0.5rem !important;
   box-shadow: 0 3px 3px -2px rgba(0, 0, 0, 0.2),
     0px 3px 4px 0px rgba(0, 0, 0, 0.14), 0px 1px 8px 0px rgba(0, 0, 0, 0.12);
@@ -521,7 +543,7 @@ header nav {
   font-size: 30px;
   font-weight: 600;
   /*margin-left: -15px!important;*/
-  color: black;
+  color: white;
 }
 
 div[disabled] {

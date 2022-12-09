@@ -37,7 +37,7 @@ import java.util.logging.Logger;
 @Named("BPMFormDataPipelineListener")
 public class BPMFormDataPipelineListener extends BaseListener implements TaskListener, ExecutionListener {
 
-    private Logger LOGGER = Logger.getLogger(BPMFormDataPipelineListener.class.getName());
+    private final Logger LOGGER = Logger.getLogger(BPMFormDataPipelineListener.class.getName());
 
     private Expression fields;
 
@@ -85,6 +85,10 @@ public class BPMFormDataPipelineListener extends BaseListener implements TaskLis
         ObjectMapper objectMapper = new ObjectMapper();
         List<String> injectableFields =  this.fields != null && this.fields.getValue(execution) != null ?
                 objectMapper.readValue(String.valueOf(this.fields.getValue(execution)),List.class): null;
+        LOGGER.info("Invoking BPMFormDataPipelineListener for applicationId::" +
+                execution.getVariables().get("applicationId")
+                + " process_pid::" +
+                execution.getVariables().get("process_pid"));
         for(String entry: injectableFields) {
             elements.add(new FormElement(entry,String.valueOf(execution.getVariable(entry))));
         }
@@ -94,4 +98,3 @@ public class BPMFormDataPipelineListener extends BaseListener implements TaskLis
 
 
 }
-

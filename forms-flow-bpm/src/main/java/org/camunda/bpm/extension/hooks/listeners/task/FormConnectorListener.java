@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Logger;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -35,6 +36,8 @@ public class FormConnectorListener extends BaseListener implements TaskListener 
 
     private Expression fields;
     private Expression copyDataIndicator;
+
+    private static final Logger LOGGER = Logger.getLogger(FormConnectorListener.class.getName());
 
     @Autowired
     private FormSubmissionService formSubmissionService;
@@ -70,6 +73,10 @@ public class FormConnectorListener extends BaseListener implements TaskListener 
         for(String entry : supFields) {
             superVariables.put(entry, delegateTask.getExecution().getVariables().get(entry));
         }
+        LOGGER.info("Invoking FormConnectorListener for applicationId::" +
+                delegateTask.getExecution().getVariables().get("applicationId")
+                + " process_pid::" +
+                delegateTask.getExecution().getVariables().get("process_pid"));
         return  formSubmissionService.createSubmission(targetFormUrl, createFormSubmissionData(submission, superVariables, getPropogateData(delegateTask)));
     }
 

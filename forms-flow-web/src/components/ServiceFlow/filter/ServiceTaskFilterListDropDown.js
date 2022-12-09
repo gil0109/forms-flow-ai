@@ -11,6 +11,7 @@ const ServiceFlowFilterListDropDown = React.memo(() => {
   const filterList = useSelector(state=> state.bpmTasks.filterList);
   const isFilterLoading = useSelector(state=> state.bpmTasks.isFilterLoading);
   const selectedFilter=useSelector(state=>state.bpmTasks.selectedFilter);
+
   const changeFilterSelection = (filter)=>{
     dispatch(setSelectedBPMFilter(filter));
     dispatch(setSelectedTaskID(null));
@@ -22,9 +23,19 @@ const ServiceFlowFilterListDropDown = React.memo(() => {
       return (
         <>
           {filterList.map((filter,index)=> (
-            <NavDropdown.Item as={Link} to='/task' className={`main-nav nav-item ${filter?.id === selectedFilter?.id ? "active-tab" : ""}`}
+            <NavDropdown.Item
+              // There are 6 other links in the Navigation Bar; index starts at 0; Hence index + 7
+              eventKey={index + 7}
+              as={Link} to='/task' className={`main-nav nav-item ${filter?.id === selectedFilter?.id ? "dropdown-option-selected" : ""}`}
                               key={index} onClick={()=>changeFilterSelection(filter)}>
-              {filter?.name} {`(${ filter.itemCount || 0})`}
+              <span
+                className={`
+                  ${filter?.id === selectedFilter?.id ? "dropdown-option-selected" : "black-text"}
+                `}
+                >
+                  {filter?.name}
+                  {`(${ filter.itemCount || 0})`}
+                </span>
             </NavDropdown.Item>
             )
           )}

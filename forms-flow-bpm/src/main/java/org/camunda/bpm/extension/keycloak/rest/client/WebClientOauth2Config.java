@@ -10,8 +10,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
-import org.springframework.security.oauth2.client.*;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -48,9 +48,9 @@ public class WebClientOauth2Config {
 
     @Bean
     public WebClient unauthenticatedWebClient(){
-    	
-    	int maxInMemorySize = Integer.parseInt(integrationCredentialProperties.getProperty("camunda.spring.webclient.maxInMemorySize")) * 1024 * 1024;
-    	
+       
+       int maxInMemorySize = Integer.parseInt(integrationCredentialProperties.getProperty("camunda.spring.webclient.maxInMemorySize")) * 1024 * 1024;
+       
         return WebClient.builder()
                 .exchangeStrategies(ExchangeStrategies.builder()
                         .codecs(configurer -> configurer
@@ -61,31 +61,13 @@ public class WebClientOauth2Config {
                 .build();
     }
 
-    @Bean
-    public OAuth2AuthorizedClientManager authorizedClientManager(
-            ClientRegistrationRepository clientRegistrationRepository,
-            OAuth2AuthorizedClientService clientService)
-    {
 
-        OAuth2AuthorizedClientProvider authorizedClientProvider =
-                OAuth2AuthorizedClientProviderBuilder.builder()
-                        .clientCredentials()
-                        .build();
-
-        AuthorizedClientServiceOAuth2AuthorizedClientManager authorizedClientManager =
-                new AuthorizedClientServiceOAuth2AuthorizedClientManager(
-                        clientRegistrationRepository, clientService);
-        authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
-
-        return authorizedClientManager;
-    }
-
-
-    @Bean
-    WebClient webClient(OAuth2AuthorizedClientManager authorizedClientManager) {
+/*    @Bean
+    WebClient webClient(ClientRegistrationRepository webClientClientRegistrationRepository,
+                        OAuth2AuthorizedClientRepository authorizedClients) {
         ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2 =
                 new ServletOAuth2AuthorizedClientExchangeFilterFunction(
-                        authorizedClientManager);
+                        webClientClientRegistrationRepository, authorizedClients);
         oauth2.setDefaultClientRegistrationId ("keycloak-client");
         
         int maxInMemorySize = Integer.parseInt(integrationCredentialProperties.getProperty("camunda.spring.webclient.maxInMemorySize")) * 1024 * 1024;
@@ -99,5 +81,5 @@ public class WebClientOauth2Config {
                 .apply(oauth2.oauth2Configuration())
                 .clientConnector(clientHttpConnector())
                 .build();
-    }
+    }*/
 }
