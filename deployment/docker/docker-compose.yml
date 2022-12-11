@@ -23,7 +23,7 @@ services:
 
   forms-flow-forms:
     container_name: forms-flow-forms
-    image: forms-flow-forms:latest
+    image: formio-forms-flow-forms:latest
     
     # The app will restart until Mongo is listening
     restart: always
@@ -98,7 +98,7 @@ services:
       - CUSTOM_SUBMISSION_ENABLED=${CUSTOM_SUBMISSION_ENABLED:-false}
       - MULTI_TENANCY_ENABLED=${MULTI_TENANCY_ENABLED:-false}
       - KEYCLOAK_ENABLE_CLIENT_AUTH=${KEYCLOAK_ENABLE_CLIENT_AUTH:-false}
-      - KEYCLOAK_WEB_CLIENTID=${KEYCLOAK_WEB_CLIENTID:-forms-flow-web}
+      - KEYCLOAK_WEB_CLIENTID=${KEYCLOAK_WEB_CLIENT_ID:-forms-flow-web}
       - FORMSFLOW_ADMIN_URL=${FORMSFLOW_ADMIN_URL:-}
       - REDIS_HOST=${REDIS_HOST:-localhost}
       - REDIS_PORT=${REDIS_PORT:-6379}
@@ -118,11 +118,11 @@ services:
       dockerfile: Dockerfile
       args:
         - NODE_ENV=${NODE_ENV:-production}
-        - REACT_APP_API_SERVER_URL=${FORMIO_DEFAULT_PROJECT_URL}
-        - REACT_APP_API_PROJECT_URL=${FORMIO_DEFAULT_PROJECT_URL}
+        - REACT_APP_API_SERVER_URL=${WEB_FORMIO_DEFAULT_PROJECT_URL}
+        - REACT_APP_API_PROJECT_URL=${WEB_FORMIO_DEFAULT_PROJECT_URL}
         - REACT_APP_KEYCLOAK_CLIENT=${KEYCLOAK_WEB_CLIENT_ID:-forms-flow-web}
         - REACT_APP_WEB_BASE_URL=${WEB_FORMSFLOW_API_URL}
-        - REACT_APP_CAMUNDA_API_URI=${CAMUNDA_API_URL}
+        - REACT_APP_BPM_URL=${CAMUNDA_API_URL}
         - REACT_APP_WEBSOCKET_ENCRYPT_KEY=${WEBSOCKET_ENCRYPT_KEY:-giert989jkwrgb@DR55}
         - REACT_APP_KEYCLOAK_URL_REALM=${KEYCLOAK_URL_REALM:-forms-flow-ai}
         - REACT_APP_KEYCLOAK_URL=${KEYCLOAK_URL}
@@ -181,7 +181,7 @@ services:
       BPM_TOKEN_API: ${KEYCLOAK_URL}/auth/realms/${KEYCLOAK_URL_REALM:-forms-flow-ai}/protocol/openid-connect/token
       BPM_CLIENT_ID: ${KEYCLOAK_BPM_CLIENT_ID:-forms-flow-bpm}
       BPM_CLIENT_SECRET: ${KEYCLOAK_BPM_CLIENT_SECRET:-e4bdbd25-1467-4f7f-b993-bc4b1944c943}
-      BPM_API_BASE: ${BPM_API_URL}
+      BPM_API_URL: ${BPM_API_URL}
       FORMSFLOW_API_CORS_ORIGINS: ${FORMSFLOW_API_CORS_ORIGINS:-*}
       JWT_OIDC_WELL_KNOWN_CONFIG: ${KEYCLOAK_URL}/auth/realms/${KEYCLOAK_URL_REALM:-forms-flow-ai}/.well-known/openid-configuration
       JWT_OIDC_ALGORITHMS: 'RS256'
@@ -199,6 +199,8 @@ services:
       FORMIO_JWT_SECRET: ${FORMIO_JWT_SECRET:---- change me now ---}
       KEYCLOAK_ENABLE_CLIENT_AUTH: ${KEYCLOAK_ENABLE_CLIENT_AUTH:-false}
       MULTI_TENANCY_ENABLED: ${MULTI_TENANCY_ENABLED:-false}
+      WEB_BASE_URL: ${WEB_BASE_URL:-null}
+
 
     stdin_open: true # -i
     tty: true # -t
@@ -214,7 +216,7 @@ services:
     ports:
       - '5006:5006'
     volumes:
-      - ./:/app:rw
+      - ffdocuments:/app:rw
     environment:
       DATABASE_URL: ${FORMSFLOW_API_DB_URL:-postgresql://postgres:changeme@forms-flow-webapi-db:5432/webapi}
       FORMSFLOW_API_CORS_ORIGINS: ${FORMSFLOW_API_CORS_ORIGINS:-*}
@@ -252,3 +254,4 @@ volumes:
   camundadb:
   webapidb:
   webapi:
+  ffdocuments:
