@@ -13,7 +13,7 @@ RUN mvn -s /usr/share/maven/ref/settings-docker.xml package -P default
 # Final custom slim java image (for apk command see 17-jdk-alpine-slim)
 
 #FROM arm64v8/eclipse-temurin:17-jdk
-FROM arm64v8/eclipse-temurin:17-jdk
+FROM eclipse-temurin:17-jdk-jammy
 ENV JAVA_VERSION=17
 ENV JAVA_HOME=/opt/java/openjdk-17\
     PATH="/opt/java/openjdk-17/bin:$PATH"
