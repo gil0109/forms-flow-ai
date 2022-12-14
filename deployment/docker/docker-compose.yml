@@ -1,6 +1,15 @@
 # Author: Gurumoorthy Mohan
 version: '3.7'
 
+x-redash-service: &redash-service
+  image: formsflow/redash:10.1.2
+  depends_on:
+      - redis
+  env_file: .env
+  restart: always
+  networks:
+    - forms-flow-network
+    
 services:
   forms-flow-forms-db:
     container_name: forms-flow-forms-db
@@ -15,21 +24,21 @@ services:
       MONGO_INITDB_DATABASE: ${FORMIO_DB_NAME:-formio}
     volumes:
       - ./../../forms-flow-forms/mongo_entrypoint/001_user.js:/docker-entrypoint-initdb.d/001_user.js:ro
-      - mongodb:/data/db/
-      - mongodb:/var/log/mongodb/
-      - mongodb:/etc/mongod.conf
+      - .db/mongo/data:/data/db/ 777
+      - .db/mongo/data/log:/var/log/mongodb/ 777
+      - .db/mongo/mongod.conf:/etc/mongod.conf:rw
     networks:
       - forms-flow-network
 
   formsflow-db:
-    image: postgres:11
+    image: postgres:14
     container_name: formsflow-db
     environment:
       POSTGRES_MULTIPLE_DATABASES: bpm,webapi,analytics,adminapi
       POSTGRES_USER:
       POSTGRES_PASSWORD:
     volumes:
-      - formsflow-db:/var/lib/postgresql/data 777
+      - .db/postgres:/var/lib/postgresql/data 777
       - ./configuration/docker-postgresql-multiple-databases:/docker-entrypoint-initdb.d
     ports:
       - '5432:5432'
@@ -53,12 +62,10 @@ services:
       NODE_CONFIG: "{\"mongo\":\"mongodb://${FORMIO_DB_USERNAME:-admin}:${FORMIO_DB_PASSWORD:-changeme}@forms-flow-forms-db:27017/${FORMIO_DB_NAME:-formio}?authMechanism=SCRAM-SHA-1&authSource=admin\"}"
       ROOT_EMAIL: ${FORMIO_ROOT_EMAIL:-admin@example.com}
       ROOT_PASSWORD: ${FORMIO_ROOT_PASSWORD:-changeme}
-      FORMIO_DOMAIN: ${WEB_FORMS_URL:-http://localhost:3001}
+      # Needed to add localhost to forms-flow-forms
+      FORMIO_DOMAIN: ${FORMIO_DEFAULT_PROJECT_URL}
       FORMIO_JWT_SECRET: ${FORMIO_JWT_SECRET:---- change me now ---}
       MULTI_TENANCY_ENABLED: ${MULTI_TENANCY_ENABLED:-false}
-
-    volumes:
-      - formsflowforms:/app:rw
     stdin_open: true # -i
     tty: true # -t
     networks:
@@ -66,10 +73,9 @@ services:
 
   forms-flow-bpm:
     container_name: forms-flow-bpm
-    # build:
-    #   context: ./../../forms-flow-bpm/
-    #   dockerfile: Dockerfile
-    image: formsflow/forms-flow-bpm:v5.0.2
+    build:
+      context: ./../../forms-flow-bpm/
+      dockerfile: Dockerfile
     restart: always
     depends_on :
       - formsflow-db
@@ -120,8 +126,8 @@ services:
       dockerfile: Dockerfile
       args:
         - NODE_ENV=${NODE_ENV:-production}
-        - REACT_APP_API_SERVER_URL=${WEB_FORMS_URL}
-        - REACT_APP_API_PROJECT_URL=${WEB_FORMS_URL}
+        - REACT_APP_API_SERVER_URL=${FORMS_URL}
+        - REACT_APP_API_PROJECT_URL=${FORMS_URL}
         - REACT_APP_KEYCLOAK_CLIENT=${KEYCLOAK_WEB_CLIENT_ID:-forms-flow-web}
         - REACT_APP_WEB_BASE_URL=${WEB_API_URL}
         - REACT_APP_BPM_URL=${WEB_BPM_URL}
@@ -143,7 +149,6 @@ services:
     ports:
       - '3000:8080'
     tty: true
-
     networks:
       - forms-flow-network
 
@@ -191,14 +196,44 @@ services:
     networks:
       - forms-flow-network
 
+  server:
+    <<: *redash-service
+    command: server
+    ports:
+      - '7000:5000'
+    environment:
+      REDASH_WEB_WORKERS: 4
+      REDASH_MULTI_ORG: ${REDASH_MULTI_ORG:-false}
+  scheduler:
+    <<: *redash-service
+    command: scheduler
+    depends_on:
+      - server
+  scheduled_worker:
+    <<: *redash-service
+    command: worker
+  adhoc_worker:
+    <<: *redash-service
+    command: worker
+  worker:
+    <<: *redash-service
+    command: worker
+    environment:
+      QUEUES: "periodic emails default"
+      WORKERS_COUNT: 1
+    depends_on:
+      - server
+
+  redis:
+    image: redis:6-alpine
+    restart: always
+    networks:
+      - forms-flow-network
+
 networks:
   forms-flow-network:
     driver: 'bridge'
 
-volumes:
-  mongodb:
-  formsflowforms:
-  formsflow-db:
   # ffdocuments:
 
   # forms-flow-documents-api:
@@ -212,7 +247,7 @@ volumes:
   #   volumes:
   #     - ffdocuments:/app:rw
   #   environment:
-  #     DATABASE_URL: ${FORMSFLOW_API_DB_URL:-postgresql://postgres:changeme@forms-flow-webapi-db:5432/webapi}
+  #     DATABASE_URL: ${FORMSFLOW_API_DB_URL:--ql://postgres:changeme@forms-flow-webapi-db:5432/webapi}
   #     FORMSFLOW_API_CORS_ORIGINS: ${FORMSFLOW_API_CORS_ORIGINS:-*}
   #     JWT_OIDC_WELL_KNOWN_CONFIG: ${KEYCLOAK_URL}/auth/realms/${KEYCLOAK_URL_REALM:-forms-flow-ai}/.well-known/openid-configuration
   #     JWT_OIDC_JWKS_URI: ${KEYCLOAK_URL}/auth/realms/${KEYCLOAK_URL_REALM:-forms-flow-ai}/protocol/openid-connect/certs
@@ -236,4 +271,3 @@ volumes:
   #   tty: true # -t
   #   networks:
   #     - forms-flow-network
-
