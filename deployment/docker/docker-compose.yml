@@ -33,7 +33,7 @@ services:
       - forms-flow-network
 
   formsflow-db:
-    image: postgres:14
+    image: postgres:12
     container_name: formsflow-db
     environment:
       POSTGRES_MULTIPLE_DATABASES: bpm,webapi,analytics,adminapi
