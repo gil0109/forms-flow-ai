@@ -9,6 +9,8 @@ x-redash-service: &redash-service
   restart: always
   networks:
     - forms-flow-network
+  depends_on :
+    - formsflow-db
     
 services:
   forms-flow-forms-db:
@@ -24,9 +26,9 @@ services:
       MONGO_INITDB_DATABASE: ${FORMIO_DB_NAME:-formio}
     volumes:
       - ./../../forms-flow-forms/mongo_entrypoint/001_user.js:/docker-entrypoint-initdb.d/001_user.js:ro
-      - .db/mongo/data:/data/db/ 777
-      - .db/mongo/data/log:/var/log/mongodb/ 777
-      - .db/mongo/mongod.conf:/etc/mongod.conf:rw
+      - db_mongo_data:/data/db/
+      - db_mongo_log:/var/log/mongodb/
+      - db_mongo_mongod.conf:/etc/mongod.conf
     networks:
       - forms-flow-network
 
@@ -38,8 +40,8 @@ services:
       POSTGRES_USER:
       POSTGRES_PASSWORD:
     volumes:
-      - .db/postgres:/var/lib/postgresql/data 777
-      - ./configuration/docker-postgresql-multiple-databases:/docker-entrypoint-initdb.d
+      - db_postgres:/var/lib/postgresql/data
+      - ./configuration/docker-postgresql-multiple-databases:/docker-entrypoint-initdb.d:ro
     ports:
       - '5432:5432'
     restart: always
@@ -233,6 +235,12 @@ services:
 networks:
   forms-flow-network:
     driver: 'bridge'
+
+volumes:
+  db_mongo_data:
+  db_mongo_log:
+  db_mongo_mongod.conf:
+  db_postgres:
 
   # ffdocuments:
 
