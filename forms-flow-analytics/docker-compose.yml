@@ -4,13 +4,10 @@ version: "3.7"
 x-redash-service: &redash-service
   image: formsflow/redash:10.1.2
   depends_on:
-      - forms-flow-analytics-db
+      - postgres
       - redis
   env_file: .env
   restart: always
-  networks:
-    - docker_forms-flow-network
-
 services:
   server:
     <<: *redash-service
@@ -43,32 +40,17 @@ services:
   redis:
     image: redis:6-alpine
     restart: always
-    networks:
-      - docker_forms-flow-network
-
-  forms-flow-analytics-db:
-    image: postgres:14
-    container_name: forms-flow-analytics-db
-    environment:
-      POSTGRES_USER: ${ANALYTICS_DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${ANALYTICS_DB_PASSWORD:-changeme}
-      POSTGRES_DB: ${ANALYTICS_DB_NAME:-analytics}
+  postgres:
+    image: postgres:9.6-alpine
     ports:
       - '7432:5432'
     restart: always
     env_file: .env
     volumes:
-      - analyticsdb:/var/lib/postgresql/data
-    networks:
-      - docker_forms-flow-network
+      - ./postgres/analytics:/var/lib/postgresql/data
   # Uncomment the following to enable redash mail server
   # email:
   #   image: djfarrelly/maildev
   #   ports:
   #     - "1080:80"
   #   restart: unless-stopped
-volumes:
-  analyticsdb:
-networks:
-  docker_forms-flow-network:
-    external: true
